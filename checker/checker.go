@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
 	"io/ioutil"
@@ -62,6 +63,22 @@ func init() {
 	prometheus.MustRegister(durationMetric)
 	prometheus.MustRegister(successMetric)
 	prometheus.MustRegister(failedMetric)
+}
+
+func CheckConfig(c Check) error {
+	if c.Name == "" {
+		return errors.New("name of the probe should be defined")
+	}
+	if c.Url == "" {
+		return errors.New("url of the probe should be defined")
+	}
+	if c.Interval == 0 {
+		return errors.New("interval of the probe should be defined")
+	}
+	if c.Timeout == 0 {
+		return errors.New("duration of the probe should be defined")
+	}
+	return nil
 }
 
 func RunCheck(c Check, cr chan CheckResponse) {

@@ -6,12 +6,19 @@ import (
 )
 
 func GetConfig(cfgFile string) (checker.Checks, error) {
-	var conf checker.Checks
+	var checks checker.Checks
 
-	_, err := toml.DecodeFile(cfgFile, &conf)
+	_, err := toml.DecodeFile(cfgFile, &checks)
 	if err != nil {
-		return conf, err
+		return checks, err
 	}
 
-	return conf, nil
+	for _, c := range checks.Check {
+		err = checker.CheckConfig(c)
+		if err != nil {
+			return checks, err
+		}
+	}
+
+	return checks, nil
 }

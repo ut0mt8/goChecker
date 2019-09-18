@@ -11,7 +11,7 @@ import (
 func main() {
 	checks, err := config.GetConfig("checks.conf")
 	if err != nil {
-		log.Fatalf("error reading configuration : %v", err)
+		log.Fatalf("configuration error : %v", err)
 	}
 
 	for _, c := range checks.Check {
@@ -19,6 +19,6 @@ func main() {
 	}
 
 	http.Handle("/metrics", promhttp.Handler())
-	log.Info("Beginning to serve on port :8080")
+	log.Info("beginning to serve on port :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
