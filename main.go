@@ -15,7 +15,7 @@ func main() {
 	}
 
 	for _, c := range checks.Check {
-		go checker.StartCheck(c)
+		go checker.StartChecker(c)
 	}
 
 	http.Handle("/metrics", promhttp.Handler())

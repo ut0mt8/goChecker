@@ -9,7 +9,7 @@ import (
 func TestCheckNxDomain(t *testing.T) {
 	c := Check{
 		Name:     "nxdomain",
-		Url:      "http://nxdomain.net/",
+		Target:   "http://nxdomain.net/",
 		Interval: 0,
 		Timeout:  100,
 	}
@@ -29,22 +29,21 @@ func TestCheckNxDomain(t *testing.T) {
 func TestCheckNotFound(t *testing.T) {
 	c := Check{
 		Name:     "404-notfound",
-		Url:      "https://test.test/404",
+		Target:   "https://test.test/404",
 		Interval: 0,
 		Timeout:  300,
 	}
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://test.test/404",
-		httpmock.NewStringResponder(404, "Not found"))
+	httpmock.RegisterResponder("GET", "https://test.test/404", httpmock.NewStringResponder(404, "Not found"))
 
 	cr := make(chan CheckResponse, 1)
 	go RunCheck(c, cr)
 
 	select {
 	case r := <-cr:
-		if r.IsUp != 0 || r.StatusCode != 404 {
+		if r.IsUp != 0 || r.Status != 404 {
 			t.Errorf("404-notfound test should return down status. Test expected to fail but is passing")
 		}
 	case <-time.After(400 * time.Millisecond):
@@ -56,22 +55,21 @@ func TestCheckNotFound(t *testing.T) {
 func TestCheckOk(t *testing.T) {
 	c := Check{
 		Name:     "200-ok",
-		Url:      "https://test.test/200",
+		Target:   "https://test.test/200",
 		Interval: 0,
 		Timeout:  300,
 	}
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	httpmock.RegisterResponder("GET", "https://test.test/200",
-		httpmock.NewStringResponder(200, "It works"))
+	httpmock.RegisterResponder("GET", "https://test.test/200", httpmock.NewStringResponder(200, "It works"))
 
 	cr := make(chan CheckResponse, 1)
 	go RunCheck(c, cr)
 
 	select {
 	case r := <-cr:
-		if r.IsUp != 1 || r.StatusCode != 200 {
+		if r.IsUp != 1 || r.Status != 200 {
 			t.Errorf("200-ok test should return up status. Test expected to succeed but is failing")
 		}
 	case <-time.After(400 * time.Millisecond):
