@@ -5,6 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/ut0mt8/goChecker/checker/check"
 	"github.com/ut0mt8/goChecker/checker/check/check_http"
+	"github.com/ut0mt8/goChecker/checker/check/check_tcp"
 	"time"
 )
 
@@ -53,14 +54,19 @@ func StartChecker(c check.Check) {
 	for range ticker.C {
 		cr := make(chan check.CheckResponse, 1)
 
-		go check_http.RunCheck(c, cr)
+		switch c.Type {
+		case "http":
+			go check_http.RunCheck(c, cr)
+		case "tcp":
+			go check_tcp.RunCheck(c, cr)
+		}
 
 		select {
 		case r := <-cr:
 			isupMetric.WithLabelValues(c.Name).Set(float64(r.IsUp))
 			successMetric.WithLabelValues(c.Name).Inc()
 			durationMetric.WithLabelValues(c.Name).Set(float64(r.Duration))
-			log.Printf("check %s %s %d %d\n", c.Name, c.Target, r.Status, r.Duration)
+			log.Printf("check %s %s %s %v\n", c.Name, c.Target, r.Status, r.Duration)
 		case <-time.After(time.Duration(c.Timeout) * time.Millisecond):
 			isupMetric.WithLabelValues(c.Name).Set(0)
 			failedMetric.WithLabelValues(c.Name).Inc()

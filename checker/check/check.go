@@ -10,6 +10,7 @@ type Check struct {
 	Interval int
 	Target   string
 	Timeout  int
+	Type     string
 }
 
 type Checks struct {
@@ -18,7 +19,7 @@ type Checks struct {
 
 type CheckResponse struct {
 	IsUp     int
-	Status   int
+	Status   string
 	Duration time.Duration
 }
 
@@ -34,6 +35,12 @@ func CheckConfig(c Check) error {
 	}
 	if c.Timeout == 0 {
 		return errors.New("timeout of the probe should be defined")
+	}
+	if c.Type == "" {
+		return errors.New("type of the probe should be defined")
+	}
+	if c.Type != "http" && c.Type != "tcp" {
+		return errors.New("type of the probe is uncorrect")
 	}
 	return nil
 }

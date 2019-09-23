@@ -19,6 +19,6 @@ func main() {
 	}
 
 	http.Handle("/metrics", promhttp.Handler())
-	log.Info("beginning to serve on port :8080")
+	log.Info("beginning to serve on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

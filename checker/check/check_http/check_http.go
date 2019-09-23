@@ -9,7 +9,7 @@ import (
 
 func RunCheck(c check.Check, cr chan check.CheckResponse) {
 	var isUp int
-	var status int
+	var status string
 	var duration time.Duration
 
 	start := time.Now().UnixNano()
@@ -18,22 +18,22 @@ func RunCheck(c check.Check, cr chan check.CheckResponse) {
 	resp, err := client.Get(c.Target)
 	if err != nil {
 		isUp = 0
-		status = -1
+		status = "connection failed"
 		duration = 0
 	} else {
 		defer resp.Body.Close()
 		_, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			isUp = 0
-			status = 0
+			status = "body read failed"
 			duration = 0
 		} else if resp.StatusCode >= 200 && resp.StatusCode <= 399 {
 			isUp = 1
-			status = resp.StatusCode
+			status = resp.Status
 			duration = time.Duration(time.Now().UnixNano() - start)
 		} else {
 			isUp = 0
-			status = resp.StatusCode
+			status = resp.Status
 			duration = time.Duration(time.Now().UnixNano() - start)
 		}
 	}
