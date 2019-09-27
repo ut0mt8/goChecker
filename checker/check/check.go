@@ -23,7 +23,7 @@ type CheckResponse struct {
 	Duration time.Duration
 }
 
-func CheckConfig(c Check) error {
+func (c Check) CheckConfig() error {
 	if c.Name == "" {
 		return errors.New("name of the probe should be defined")
 	}

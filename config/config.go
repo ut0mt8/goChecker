@@ -14,7 +14,7 @@ func GetConfig(cfgFile string) (check.Checks, error) {
 	}
 
 	for _, c := range checks.Check {
-		err = check.CheckConfig(c)
+		err = c.CheckConfig()
 		if err != nil {
 			return checks, err
 		}
