@@ -3,7 +3,6 @@ package main
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/ut0mt8/goChecker/checker"
 	"github.com/ut0mt8/goChecker/config"
 	"net/http"
 )
@@ -15,7 +14,7 @@ func main() {
 	}
 
 	for _, c := range checks.Check {
-		go checker.StartChecker(c)
+		go c.Start()
 	}
 
 	http.Handle("/metrics", promhttp.Handler())

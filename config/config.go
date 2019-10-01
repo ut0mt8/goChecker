@@ -2,9 +2,9 @@ package config
 
 import (
 	"github.com/BurntSushi/toml"
-	"github.com/ut0mt8/goChecker/checker/check"
-	"github.com/ut0mt8/goChecker/checker/check/check_http"
-	"github.com/ut0mt8/goChecker/checker/check/check_tcp"
+	"github.com/ut0mt8/goChecker/check"
+	"github.com/ut0mt8/goChecker/check/check_http"
+	"github.com/ut0mt8/goChecker/check/check_tcp"
 )
 
 func GetConfig(cfgFile string) (check.Checks, error) {
@@ -16,7 +16,7 @@ func GetConfig(cfgFile string) (check.Checks, error) {
 	}
 
 	for i, c := range checks.Check {
-		err = check.CheckConfig(c)
+		err = c.Validate()
 		if err != nil {
 			return checks, err
 		}
