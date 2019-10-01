@@ -11,6 +11,7 @@ type Check struct {
 	Target   string
 	Timeout  int
 	Type     string
+	Run      func(Check, chan CheckResponse)
 }
 
 type Checks struct {
@@ -23,7 +24,7 @@ type CheckResponse struct {
 	Duration time.Duration
 }
 
-func (c Check) CheckConfig() error {
+func CheckConfig(c Check) error {
 	if c.Name == "" {
 		return errors.New("name of the probe should be defined")
 	}

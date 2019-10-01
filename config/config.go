@@ -3,6 +3,8 @@ package config
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/ut0mt8/goChecker/checker/check"
+	"github.com/ut0mt8/goChecker/checker/check/check_http"
+	"github.com/ut0mt8/goChecker/checker/check/check_tcp"
 )
 
 func GetConfig(cfgFile string) (check.Checks, error) {
@@ -13,10 +15,16 @@ func GetConfig(cfgFile string) (check.Checks, error) {
 		return checks, err
 	}
 
-	for _, c := range checks.Check {
-		err = c.CheckConfig()
+	for i, c := range checks.Check {
+		err = check.CheckConfig(c)
 		if err != nil {
 			return checks, err
+		}
+		switch c.Type {
+		case "http":
+			checks.Check[i].Run = check_http.Run
+		case "tcp":
+			checks.Check[i].Run = check_tcp.Run
 		}
 	}
 

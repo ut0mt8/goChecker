@@ -15,7 +15,7 @@ func TestCheckNxDomain(t *testing.T) {
 		Timeout:  100,
 	}
 	cr := make(chan check.CheckResponse, 1)
-	go RunCheck(c, cr)
+	go Run(c, cr)
 	select {
 	case r := <-cr:
 		if r.IsUp != 0 {
@@ -40,7 +40,7 @@ func TestCheckNotFound(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://test.test/404", httpmock.NewStringResponder(404, "Not found"))
 
 	cr := make(chan check.CheckResponse, 1)
-	go RunCheck(c, cr)
+	go Run(c, cr)
 
 	select {
 	case r := <-cr:
@@ -66,7 +66,7 @@ func TestCheckOk(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://test.test/200", httpmock.NewStringResponder(200, "It works"))
 
 	cr := make(chan check.CheckResponse, 1)
-	go RunCheck(c, cr)
+	go Run(c, cr)
 
 	select {
 	case r := <-cr:

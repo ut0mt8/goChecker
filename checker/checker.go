@@ -4,8 +4,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/ut0mt8/goChecker/checker/check"
-	"github.com/ut0mt8/goChecker/checker/check/check_http"
-	"github.com/ut0mt8/goChecker/checker/check/check_tcp"
 	"time"
 )
 
@@ -53,13 +51,7 @@ func StartChecker(c check.Check) {
 
 	for range ticker.C {
 		cr := make(chan check.CheckResponse, 1)
-
-		switch c.Type {
-		case "http":
-			go check_http.RunCheck(c, cr)
-		case "tcp":
-			go check_tcp.RunCheck(c, cr)
-		}
+		go c.Run(c, cr)
 
 		select {
 		case r := <-cr:

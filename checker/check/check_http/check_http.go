@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func RunCheck(c check.Check, cr chan check.CheckResponse) {
+func Run(c check.Check, cr chan check.CheckResponse) {
 	var isUp int
 	var status string
 	var duration time.Duration
