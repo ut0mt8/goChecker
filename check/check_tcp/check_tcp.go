@@ -11,7 +11,7 @@ func Run(c check.Check, cr chan check.CheckResponse) {
 	var status string
 	var duration time.Duration
 
-	start := time.Now().UnixNano()
+	start := time.Now()
 	_, err := net.DialTimeout("tcp", c.Target, time.Duration(c.Timeout)*time.Millisecond)
 
 	if err != nil {
@@ -21,7 +21,7 @@ func Run(c check.Check, cr chan check.CheckResponse) {
 	} else {
 		isUp = 1
 		status = "connection success"
-		duration = time.Duration(time.Now().UnixNano() - start)
+		duration = time.Since(start)
 	}
 
 	cr <- check.CheckResponse{

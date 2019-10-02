@@ -16,9 +16,7 @@ type Check struct {
 	Run      func(Check, chan CheckResponse)
 }
 
-type Checks struct {
-	Check []Check
-}
+type Checks []Check
 
 type CheckResponse struct {
 	IsUp     int

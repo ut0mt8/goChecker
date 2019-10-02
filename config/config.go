@@ -7,25 +7,34 @@ import (
 	"github.com/ut0mt8/goChecker/check/check_tcp"
 )
 
+type Config struct {
+	Checks map[string]*check.Check
+}
+
 func GetConfig(cfgFile string) (check.Checks, error) {
+	var cfg Config
 	var checks check.Checks
 
-	_, err := toml.DecodeFile(cfgFile, &checks)
+	_, err := toml.DecodeFile(cfgFile, &cfg)
 	if err != nil {
-		return checks, err
+		return nil, err
 	}
 
-	for i, c := range checks.Check {
-		err = c.Validate()
-		if err != nil {
-			return checks, err
-		}
+	for k, c := range cfg.Checks {
+
+		cfg.Checks[k].Name = k
 		switch c.Type {
 		case "http":
-			checks.Check[i].Run = check_http.Run
+			cfg.Checks[k].Run = check_http.Run
 		case "tcp":
-			checks.Check[i].Run = check_tcp.Run
+			cfg.Checks[k].Run = check_tcp.Run
 		}
+
+		err = c.Validate()
+		if err != nil {
+			return nil, err
+		}
+		checks = append(checks, *c)
 	}
 
 	return checks, nil

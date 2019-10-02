@@ -12,7 +12,7 @@ func Run(c check.Check, cr chan check.CheckResponse) {
 	var status string
 	var duration time.Duration
 
-	start := time.Now().UnixNano()
+	start := time.Now()
 	client := http.Client{Timeout: time.Duration(c.Timeout) * time.Millisecond}
 
 	resp, err := client.Get(c.Target)
@@ -30,11 +30,11 @@ func Run(c check.Check, cr chan check.CheckResponse) {
 		} else if resp.StatusCode >= 200 && resp.StatusCode <= 399 {
 			isUp = 1
 			status = resp.Status
-			duration = time.Duration(time.Now().UnixNano() - start)
+			duration = time.Since(start)
 		} else {
 			isUp = 0
 			status = resp.Status
-			duration = time.Duration(time.Now().UnixNano() - start)
+			duration = time.Since(start)
 		}
 	}
 

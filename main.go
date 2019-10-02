@@ -13,7 +13,7 @@ func main() {
 		log.Fatalf("configuration error : %v", err)
 	}
 
-	for _, c := range checks.Check {
+	for _, c := range checks {
 		go c.Start()
 	}
 
