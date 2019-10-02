@@ -1,10 +1,11 @@
 package main
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/ut0mt8/goChecker/config"
 	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
+	"github.com/ut0mt8/goChecker/config"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 		log.Fatalf("configuration error : %v", err)
 	}
 
-	for _, c := range checks.Check {
+	for _, c := range checks {
 		go c.Start()
 	}
 

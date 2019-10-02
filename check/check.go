@@ -2,11 +2,18 @@ package check
 
 import (
 	"errors"
-	log "github.com/Sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
+// Checker interface
+type Checker interface {
+	Run(chan CheckResponse)
+	Start()
+}
+
+// Check ...
 type Check struct {
 	Name     string
 	Interval int
@@ -16,10 +23,10 @@ type Check struct {
 	Run      func(Check, chan CheckResponse)
 }
 
-type Checks struct {
-	Check []Check
-}
+// Checks ...
+type Checks []Check
 
+// CheckResponse ...
 type CheckResponse struct {
 	IsUp     int
 	Status   string
@@ -64,6 +71,21 @@ func init() {
 	prometheus.MustRegister(failedMetric)
 }
 
+// SetUpMetricsSuccess ...
+func SetUpMetricsSuccess(name string, isUp float64, duration float64) {
+	isupMetric.WithLabelValues(name).Set(isUp)
+	successMetric.WithLabelValues(name).Inc()
+	durationMetric.WithLabelValues(name).Set(duration)
+}
+
+// SetUpMetricsFailed ...
+func SetUpMetricsFailed(name string, isUp int, duration float64) {
+	isupMetric.WithLabelValues(name).Set(0)
+	failedMetric.WithLabelValues(name).Inc()
+	durationMetric.WithLabelValues(name).Set(duration)
+}
+
+// Validate ...
 func (c Check) Validate() error {
 	if c.Name == "" {
 		return errors.New("name of the probe should be defined")
@@ -86,7 +108,8 @@ func (c Check) Validate() error {
 	return nil
 }
 
-func (c Check) Start() {
+// Start ...
+/* func (c Check) Start() {
 	log.Printf("check thread %s started\n", c.Name)
 	ticker := time.NewTicker(time.Duration(c.Interval) * time.Millisecond)
 
@@ -109,4 +132,4 @@ func (c Check) Start() {
 	}
 
 	log.Printf("check thread %s ended\n", c.Name)
-}
+} */

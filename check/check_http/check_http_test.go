@@ -1,10 +1,11 @@
 package check_http
 
 import (
-	"github.com/jarcoal/httpmock"
-	"github.com/ut0mt8/goChecker/check"
 	"testing"
 	"time"
+
+	"github.com/jarcoal/httpmock"
+	"github.com/ut0mt8/goChecker/check"
 )
 
 func TestCheckNxDomain(t *testing.T) {
@@ -15,7 +16,9 @@ func TestCheckNxDomain(t *testing.T) {
 		Timeout:  100,
 	}
 	cr := make(chan check.CheckResponse, 1)
-	go Run(c, cr)
+	go func() {
+		(&CheckHTTP{Check: c}).Run(cr)
+	}()
 	select {
 	case r := <-cr:
 		if r.IsUp != 0 {
@@ -40,7 +43,9 @@ func TestCheckNotFound(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://test.test/404", httpmock.NewStringResponder(404, "Not found"))
 
 	cr := make(chan check.CheckResponse, 1)
-	go Run(c, cr)
+	go func() {
+		(&CheckHTTP{Check: c}).Run(cr)
+	}()
 
 	select {
 	case r := <-cr:
@@ -66,7 +71,9 @@ func TestCheckOk(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://test.test/200", httpmock.NewStringResponder(200, "It works"))
 
 	cr := make(chan check.CheckResponse, 1)
-	go Run(c, cr)
+	go func() {
+		(&CheckHTTP{Check: c}).Run(cr)
+	}()
 
 	select {
 	case r := <-cr:

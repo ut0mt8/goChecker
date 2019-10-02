@@ -1,10 +1,11 @@
 package check_tcp
 
 import (
-	"github.com/ut0mt8/goChecker/check"
 	"net"
 	"testing"
 	"time"
+
+	"github.com/ut0mt8/goChecker/check"
 )
 
 func TestCheckKo(t *testing.T) {
@@ -16,7 +17,9 @@ func TestCheckKo(t *testing.T) {
 	}
 
 	cr := make(chan check.CheckResponse, 1)
-	go Run(c, cr)
+	go func() {
+		(&CheckTCP{Check: c}).Run(cr)
+	}()
 
 	select {
 	case r := <-cr:
@@ -43,7 +46,9 @@ func TestCheckOk(t *testing.T) {
 	}()
 
 	cr := make(chan check.CheckResponse, 1)
-	go Run(c, cr)
+	go func() {
+		(&CheckTCP{Check: c}).Run(cr)
+	}()
 
 	select {
 	case r := <-cr:
