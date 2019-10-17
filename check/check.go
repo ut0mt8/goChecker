@@ -4,6 +4,7 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
+	"sync"
 	"time"
 )
 
@@ -84,27 +85,33 @@ func (c Check) Validate() error {
 	return nil
 }
 
-func (c Check) Start() {
+func (c Check) Start(done chan bool, wg *sync.WaitGroup) {
 	log.Printf("check thread %s started\n", c.Name)
 	ticker := time.NewTicker(time.Duration(c.Interval) * time.Millisecond)
 
-	for range ticker.C {
-		cr := make(chan CheckResponse, 1)
-		go c.Run(c, cr)
-
+	for {
 		select {
-		case r := <-cr:
-			isupMetric.WithLabelValues(c.Name).Set(float64(r.IsUp))
-			successMetric.WithLabelValues(c.Name).Inc()
-			durationMetric.WithLabelValues(c.Name).Set(float64(r.Duration))
-			log.Printf("check %s %s %s %v\n", c.Name, c.Target, r.Status, r.Duration)
-		case <-time.After(time.Duration(c.Timeout) * time.Millisecond):
-			isupMetric.WithLabelValues(c.Name).Set(0)
-			failedMetric.WithLabelValues(c.Name).Inc()
-			durationMetric.WithLabelValues(c.Name).Set(float64(c.Timeout))
-			log.Printf("check %s %s timeout\n", c.Name, c.Target)
+		case <-ticker.C:
+			cr := make(chan CheckResponse, 1)
+			go c.Run(c, cr)
+
+			select {
+			case r := <-cr:
+				isupMetric.WithLabelValues(c.Name).Set(float64(r.IsUp))
+				successMetric.WithLabelValues(c.Name).Inc()
+				durationMetric.WithLabelValues(c.Name).Set(float64(r.Duration))
+				log.Printf("check %s %s %s %v\n", c.Name, c.Target, r.Status, r.Duration)
+			case <-time.After(time.Duration(c.Timeout) * time.Millisecond):
+				isupMetric.WithLabelValues(c.Name).Set(0)
+				failedMetric.WithLabelValues(c.Name).Inc()
+				durationMetric.WithLabelValues(c.Name).Set(float64(c.Timeout))
+				log.Printf("check %s %s timeout\n", c.Name, c.Target)
+			}
+		case <-done:
+			log.Printf("check thread %s ended\n", c.Name)
+			wg.Done()
+			return
 		}
 	}
 
-	log.Printf("check thread %s ended\n", c.Name)
 }
