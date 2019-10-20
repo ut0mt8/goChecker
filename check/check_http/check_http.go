@@ -4,43 +4,43 @@ import (
 	"github.com/ut0mt8/goChecker/check"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"time"
 )
 
 func Run(c check.Check, cr chan check.CheckResponse) {
-	var isUp int
-	var status string
-	var duration time.Duration
-
 	start := time.Now()
 	client := http.Client{Timeout: time.Duration(c.Timeout) * time.Millisecond}
 
 	resp, err := client.Get(c.Target)
 	if err != nil {
-		isUp = 0
-		status = "connection failed"
-		duration = 0
-	} else {
-		defer resp.Body.Close()
-		_, err := ioutil.ReadAll(resp.Body)
+		c.SendResponse(cr, 0, "connection failed", 0)
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		c.SendResponse(cr, 0, "body read failed", 0)
+		return
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode > 399 {
+		c.SendResponse(cr, 0, resp.Status, time.Since(start))
+		return
+	}
+
+	if c.BodyMatch != "" {
+		re, err := regexp.Compile(c.BodyMatch)
 		if err != nil {
-			isUp = 0
-			status = "body read failed"
-			duration = 0
-		} else if resp.StatusCode >= 200 && resp.StatusCode <= 399 {
-			isUp = 1
-			status = resp.Status
-			duration = time.Since(start)
-		} else {
-			isUp = 0
-			status = resp.Status
-			duration = time.Since(start)
+			c.SendResponse(cr, 0, "bad body regexp", time.Since(start))
+			return
+		}
+		if !re.Match(body) {
+			c.SendResponse(cr, 0, "body not match regexp", time.Since(start))
+			return
 		}
 	}
 
-	cr <- check.CheckResponse{
-		IsUp:     isUp,
-		Status:   status,
-		Duration: duration,
-	}
+	c.SendResponse(cr, 1, resp.Status, time.Since(start))
 }

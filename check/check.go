@@ -9,12 +9,13 @@ import (
 )
 
 type Check struct {
-	Name     string
-	Interval int
-	Target   string
-	Timeout  int
-	Type     string
-	Run      func(Check, chan CheckResponse)
+	Name      string
+	Interval  int
+	Target    string
+	Timeout   int
+	Type      string
+	Run       func(Check, chan CheckResponse)
+	BodyMatch string
 }
 
 type Checks []Check
@@ -85,8 +86,16 @@ func (c Check) Validate() error {
 	return nil
 }
 
+func (c Check) SendResponse(cr chan CheckResponse, up int, status string, duration time.Duration) {
+	cr <- CheckResponse{
+		IsUp:     up,
+		Status:   status,
+		Duration: duration,
+	}
+}
+
 func (c Check) Start(done chan bool, wg *sync.WaitGroup) {
-	log.Printf("check thread %s started\n", c.Name)
+	log.Printf("> thread %s started\n", c.Name)
 	ticker := time.NewTicker(time.Duration(c.Interval) * time.Millisecond)
 
 	for {
@@ -100,15 +109,15 @@ func (c Check) Start(done chan bool, wg *sync.WaitGroup) {
 				isupMetric.WithLabelValues(c.Name).Set(float64(r.IsUp))
 				successMetric.WithLabelValues(c.Name).Inc()
 				durationMetric.WithLabelValues(c.Name).Set(float64(r.Duration))
-				log.Printf("check %s %s %s %v\n", c.Name, c.Target, r.Status, r.Duration)
+				log.Printf("[%s] %s : %s (%v)\n", c.Name, c.Target, r.Status, r.Duration)
 			case <-time.After(time.Duration(c.Timeout) * time.Millisecond):
 				isupMetric.WithLabelValues(c.Name).Set(0)
 				failedMetric.WithLabelValues(c.Name).Inc()
 				durationMetric.WithLabelValues(c.Name).Set(float64(c.Timeout))
-				log.Printf("check %s %s timeout\n", c.Name, c.Target)
+				log.Printf("[%s] %s : timeout\n", c.Name, c.Target)
 			}
 		case <-done:
-			log.Printf("check thread %s ended\n", c.Name)
+			log.Printf("> thread %s ended\n", c.Name)
 			wg.Done()
 			return
 		}
