@@ -55,6 +55,13 @@ var (
 		},
 		[]string{"check"},
 	)
+	totalMetric = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "checker_total",
+			Help: "Total number of checks",
+		},
+		[]string{"check"},
+	)
 )
 
 func init() {
@@ -62,6 +69,7 @@ func init() {
 	prometheus.MustRegister(durationMetric)
 	prometheus.MustRegister(successMetric)
 	prometheus.MustRegister(failedMetric)
+	prometheus.MustRegister(totalMetric)
 }
 
 func (c Check) Validate() error {
@@ -107,12 +115,18 @@ func (c Check) Start(done chan bool, wg *sync.WaitGroup) {
 			select {
 			case r := <-cr:
 				isupMetric.WithLabelValues(c.Name).Set(float64(r.IsUp))
-				successMetric.WithLabelValues(c.Name).Inc()
+				if r.IsUp == 1 {
+					successMetric.WithLabelValues(c.Name).Inc()
+				} else {
+					failedMetric.WithLabelValues(c.Name).Inc()
+				}
+				totalMetric.WithLabelValues(c.Name).Inc()
 				durationMetric.WithLabelValues(c.Name).Set(float64(r.Duration))
 				log.Printf("[%s] %s : %s (%v)\n", c.Name, c.Target, r.Status, r.Duration)
 			case <-time.After(time.Duration(c.Timeout) * time.Millisecond):
 				isupMetric.WithLabelValues(c.Name).Set(0)
 				failedMetric.WithLabelValues(c.Name).Inc()
+				totalMetric.WithLabelValues(c.Name).Inc()
 				durationMetric.WithLabelValues(c.Name).Set(float64(c.Timeout))
 				log.Printf("[%s] %s : timeout\n", c.Name, c.Target)
 			}
