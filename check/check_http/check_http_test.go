@@ -46,7 +46,7 @@ func TestCheckNotFound(t *testing.T) {
 
 	select {
 	case r := <-cr:
-		if r.IsUp != 0 || r.Status != "404" {
+		if r.IsUp != 0 || r.Status != "bad status code" {
 			t.Errorf("%s test should return down status. Test expected to fail but is passing", testName)
 		}
 	case <-time.After(400 * time.Millisecond):

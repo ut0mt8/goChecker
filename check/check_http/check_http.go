@@ -5,10 +5,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 )
 
 func Run(c check.Check, cr chan check.CheckResponse) {
+	statusCode := "[23][0-9]{2}"
 	start := time.Now()
 	client := http.Client{Timeout: time.Duration(c.Timeout) * time.Millisecond}
 
@@ -25,8 +27,17 @@ func Run(c check.Check, cr chan check.CheckResponse) {
 		return
 	}
 
-	if resp.StatusCode < 200 || resp.StatusCode > 399 {
-		c.SendResponse(cr, 0, resp.Status, time.Since(start))
+	if c.StatusMatch != "" {
+		statusCode = c.StatusMatch
+	}
+
+	re, err := regexp.Compile(statusCode)
+	if err != nil {
+		c.SendResponse(cr, 0, "bad status regexp", time.Since(start))
+		return
+	}
+	if !re.MatchString(strconv.Itoa(resp.StatusCode)) {
+		c.SendResponse(cr, 0, "bad status code", time.Since(start))
 		return
 	}
 

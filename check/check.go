@@ -9,13 +9,14 @@ import (
 )
 
 type Check struct {
-	Name      string
-	Interval  int
-	Target    string
-	Timeout   int
-	Type      string
-	Run       func(Check, chan CheckResponse)
-	BodyMatch string
+	Name        string
+	Interval    int
+	Target      string
+	Timeout     int
+	Type        string
+	Run         func(Check, chan CheckResponse)
+	BodyMatch   string
+	StatusMatch string
 }
 
 type Checks []Check
