@@ -82,8 +82,8 @@ func TestCheckOk(t *testing.T) {
 	close(cr)
 }
 
-func TestCheckMatchKo(t *testing.T) {
-	testName := "match-ko"
+func TestCheckBodyMatchKo(t *testing.T) {
+	testName := "bodymatch-ko"
 	c := check.Check{
 		Name:      testName,
 		Target:    "https://test.test/match",
@@ -110,8 +110,8 @@ func TestCheckMatchKo(t *testing.T) {
 	close(cr)
 }
 
-func TestCheckMatchOk(t *testing.T) {
-	testName := "match-ok"
+func TestCheckBodyMatchOk(t *testing.T) {
+	testName := "bodymatch-ok"
 	c := check.Check{
 		Name:      testName,
 		Target:    "https://test.test/match",
@@ -131,6 +131,62 @@ func TestCheckMatchOk(t *testing.T) {
 	case r := <-cr:
 		if r.IsUp != 1 || r.Status != "200" {
 			t.Errorf("%s test should return up status. Test expected to succeed but is failing", testName)
+		}
+	case <-time.After(400 * time.Millisecond):
+		t.Errorf("%s test should return up status immediatly. Test expected to succeed but is timeouting", testName)
+	}
+	close(cr)
+}
+
+func TestCheckStatusMatchKo(t *testing.T) {
+	testName := "statusmatch-ko"
+	c := check.Check{
+		Name:        testName,
+		Target:      "https://test.test/status",
+		Interval:    0,
+		Timeout:     300,
+		StatusMatch: "203",
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://test.test/status", httpmock.NewStringResponder(200, "bad status"))
+
+	cr := make(chan check.CheckResponse, 1)
+	go Run(c, cr)
+
+	select {
+	case r := <-cr:
+		if r.IsUp != 0 || r.Status != "bad status code" {
+			t.Errorf("%s test should return down status. Test expected to fail but is passing", testName)
+		}
+	case <-time.After(400 * time.Millisecond):
+		t.Errorf("%s test should return down status immediatly. Test expected to fail but is timeouting", testName)
+	}
+	close(cr)
+}
+
+func TestCheckStatusMatchOk(t *testing.T) {
+	testName := "statusmatch-ok"
+	c := check.Check{
+		Name:        testName,
+		Target:      "https://test.test/status",
+		Interval:    0,
+		Timeout:     300,
+		StatusMatch: "41[45]",
+	}
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	httpmock.RegisterResponder("GET", "https://test.test/status", httpmock.NewStringResponder(414, "good status"))
+
+	cr := make(chan check.CheckResponse, 1)
+	go Run(c, cr)
+
+	select {
+	case r := <-cr:
+		if r.IsUp != 1 || r.Status != "414" {
+			t.Errorf("%s test should return up status. Test expected to succeed but is failing %s", testName, r.Status)
 		}
 	case <-time.After(400 * time.Millisecond):
 		t.Errorf("%s test should return up status immediatly. Test expected to succeed but is timeouting", testName)
